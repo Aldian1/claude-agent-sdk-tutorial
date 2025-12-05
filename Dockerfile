@@ -1,5 +1,12 @@
-# Use Node.js 18+ as specified in package.json engines
-FROM node:18-alpine AS base
+# Use Node.js 20 (Debian-based for glibc support, required by onnxruntime-node)
+FROM node:20-slim AS base
+
+# Install system dependencies required by onnxruntime-node
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install build dependencies if needed
 FROM base AS deps
@@ -28,8 +35,8 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
-# Production stage
-FROM base AS runner
+# Production stage - use minimal runtime image
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
