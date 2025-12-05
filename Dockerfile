@@ -50,6 +50,9 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Copy public directory for static files (frontend dashboard)
+COPY --from=builder /app/public ./public
+
 # Copy any other necessary files (e.g., supabase config if needed)
 COPY supabase ./supabase
 
