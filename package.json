@@ -1,0 +1,46 @@
+{
+  "name": "claude-sdk",
+  "description": "Claude Agent SDK TypeScript project",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/server.ts",
+    "dev:cli": "tsx src/index.ts",
+    "start": "node dist/server.js",
+    "start:cli": "node dist/index.js",
+    "supabase:start": "npx supabase start",
+    "supabase:stop": "npx supabase stop",
+    "supabase:status": "npx supabase status",
+    "supabase:reset": "npx supabase db reset",
+    "supabase:migrate": "npx supabase migration new",
+    "supabase:studio": "npx supabase studio"
+  },
+  "keywords": [
+    "claude",
+    "agent",
+    "sdk",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.58",
+    "@supabase/supabase-js": "^2.86.2",
+    "@xenova/transformers": "^2.17.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "supabase": "^2.65.6",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

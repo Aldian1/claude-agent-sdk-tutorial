@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traces Dashboard - Agent Orchestrator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .nav-bar {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: #f0f4ff;
+            border-color: #667eea;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .controls input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .gantt-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .gantt-header {
+            display: flex;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .gantt-label-column {
+            width: 250px;
+            min-width: 250px;
+            padding-right: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .gantt-timeline {
+            flex: 1;
+            min-width: 600px;
+            position: relative;
+            height: 40px;
+        }
+
+        .gantt-timeline-scale {
+            display: flex;
+            height: 100%;
+            position: relative;
+        }
+
+        .gantt-tick {
+            border-left: 1px solid #e0e0e0;
+            height: 100%;
+            position: relative;
+            flex: 1;
+        }
+
+        .gantt-tick-label {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 11px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .gantt-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: flex-start;
+            min-height: 60px;
+        }
+
+        .gantt-row-label {
+            width: 250px;
+            min-width: 250px;
+            padding-right: 15px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 2;
+            padding-top: 8px;
+        }
+
+        .gantt-row-label-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .gantt-row-label-meta {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .gantt-row-bars {
+            flex: 1;
+            min-width: 600px;
+            position: relative;
+            min-height: 60px;
+            padding-top: 4px;
+        }
+
+        .gantt-bar {
+            position: absolute;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 11px;
+            color: white;
+            font-weight: 500;
+            overflow: hidden;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .gantt-bar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 5;
+        }
+
+        .gantt-bar.span-cycle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gantt-bar.span-llm {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .gantt-bar.span-tool {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .gantt-bar.span-sub_agent {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .gantt-bar.span-custom {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .gantt-bar.span-error {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .gantt-bar.span-running {
+            opacity: 0.7;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+        }
+
+        .gantt-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 300px;
+            display: none;
+        }
+
+        .gantt-tooltip.show {
+            display: block;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .view-toggle button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .view-toggle button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .trace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .trace-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .trace-id {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .trace-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .spans-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            display: none;
+        }
+
+        .trace-card.expanded .spans-section {
+            display: block;
+        }
+
+        .spans-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .spans-tree {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .span-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .span-item:hover {
+            background: #e9ecef;
+        }
+
+        .span-item.error {
+            border-left-color: #f5576c;
+            background: #fff5f5;
+        }
+
+        .span-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .span-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .span-type {
+            font-size: 11px;
+            color: #666;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .span-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .span-details-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .refresh-btn:hover {
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auto-refresh input {
+            width: auto;
+            margin: 0;
+        }
+
+        .duration {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .traces-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .trace-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .trace-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .trace-card.expanded {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .trace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .trace-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .trace-id {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .trace-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav-bar">
+            <a href="/" class="nav-link">🤖 Agents</a>
+            <a href="/traces.html" class="nav-link active">🔍 Traces</a>
+        </nav>
+
+        <header>
+            <div>
+                <h1>🔍 Traces Dashboard</h1>
+                <p class="subtitle">View execution traces and spans for all agents</p>
+            </div>
+        </header>
+
+        <div class="controls">
+            <input type="text" id="agentFilter" placeholder="Filter by Agent ID (optional)">
+            <button onclick="loadTraces()">🔍 Filter</button>
+            <button onclick="loadTraces(true)">🔄 Refresh</button>
+            <div class="auto-refresh">
+                <label>
+                    <input type="checkbox" id="autoRefresh" checked> Auto-refresh every 5 seconds
+                </label>
+            </div>
+        </div>
+
+        <div class="view-toggle">
+            <button id="ganttViewBtn" class="active" onclick="switchView('gantt')">📊 Gantt Chart</button>
+            <button id="listViewBtn" onclick="switchView('list')">📋 List View</button>
+        </div>
+
+        <div id="tracesContainer">
+            <div class="empty-state">
+                <h3>Loading traces...</h3>
+            </div>
+        </div>
+
+        <div id="ganttTooltip" class="gantt-tooltip"></div>
+    </div>
+
+    <button class="refresh-btn" id="refreshBtn" title="Refresh">🔄</button>
+
+    <script>
+        const API_BASE = '/api/traces';
+        let autoRefreshInterval = null;
+        let expandedTraces = new Set();
+        let currentView = 'gantt';
+        let allTraces = [];
+        let allSpans = new Map(); // traceId -> spans array
+
+        // Switch between views
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('ganttViewBtn').classList.toggle('active', view === 'gantt');
+            document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
+            
+            if (allTraces.length > 0) {
+                renderTraces(allTraces);
+            }
+        }
+
+        // Load traces
+        async function loadTraces(clearFilter = false) {
+            if (clearFilter) {
+                document.getElementById('agentFilter').value = '';
+            }
+
+            const agentId = document.getElementById('agentFilter').value.trim();
+            const url = agentId ? `${API_BASE}?agentId=${encodeURIComponent(agentId)}` : API_BASE;
+
+            try {
+                document.getElementById('tracesContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3><span class="loading"></span> Loading traces...</h3>
+                    </div>
+                `;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.traces && data.traces.length > 0) {
+                    allTraces = data.traces;
+                    // Load spans for all traces
+                    await loadAllSpans(data.traces);
+                    renderTraces(data.traces);
+                } else {
+                    allTraces = [];
+                    document.getElementById('tracesContainer').innerHTML = `
+                        <div class="empty-state">
+                            <h3>No traces found</h3>
+                            <p>${agentId ? 'No traces found for this agent ID.' : 'Traces will appear here when agents start running.'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading traces:', error);
+                document.getElementById('tracesContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error loading traces</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load spans for all traces
+        async function loadAllSpans(traces) {
+            allSpans.clear();
+            const promises = traces.map(async (trace) => {
+                try {
+                    const response = await fetch(`${API_BASE}/${trace.id}/spans`);
+                    const data = await response.json();
+                    if (data.spans && data.spans.length > 0) {
+                        allSpans.set(trace.id, data.spans);
+                    }
+                } catch (error) {
+                    console.error(`Error loading spans for trace ${trace.id}:`, error);
+                }
+            });
+            await Promise.all(promises);
+        }
+
+        // Render traces based on current view
+        function renderTraces(traces) {
+            const container = document.getElementById('tracesContainer');
+            
+            if (currentView === 'gantt') {
+                renderGanttChart(traces);
+            } else {
+                renderListView(traces);
+            }
+        }
+
+        // Render Gantt chart
+        function renderGanttChart(traces) {
+            if (traces.length === 0) {
+                document.getElementById('tracesContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3>No traces found</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate time range
+            let minTime = Infinity;
+            let maxTime = -Infinity;
+            
+            traces.forEach(trace => {
+                const startTime = new Date(trace.start_time).getTime();
+                const endTime = trace.end_time ? new Date(trace.end_time).getTime() : Date.now();
+                minTime = Math.min(minTime, startTime);
+                maxTime = Math.max(maxTime, endTime);
+                
+                // Also check spans
+                const spans = allSpans.get(trace.id) || [];
+                spans.forEach(span => {
+                    const spanStart = new Date(span.start_time).getTime();
+                    const spanEnd = span.end_time ? new Date(span.end_time).getTime() : Date.now();
+                    minTime = Math.min(minTime, spanStart);
+                    maxTime = Math.max(maxTime, spanEnd);
+                });
+            });
+
+            const timeRange = maxTime - minTime;
+            const numTicks = 20;
+            const tickInterval = timeRange / numTicks;
+
+            // Create Gantt chart HTML
+            let html = '<div class="gantt-container">';
+            
+            // Header with timeline
+            html += '<div class="gantt-header">';
+            html += '<div class="gantt-label-column">Trace / Span</div>';
+            html += '<div class="gantt-timeline">';
+            html += '<div class="gantt-timeline-scale">';
+            for (let i = 0; i <= numTicks; i++) {
+                const tickTime = minTime + (i * tickInterval);
+                const tickDate = new Date(tickTime);
+                html += `<div class="gantt-tick">`;
+                if (i % 5 === 0) {
+                    html += `<div class="gantt-tick-label">${tickDate.toLocaleTimeString()}</div>`;
+                }
+                html += `</div>`;
+            }
+            html += '</div></div></div>';
+
+            // Render each trace with its spans
+            traces.forEach((trace, traceIndex) => {
+                const traceStart = new Date(trace.start_time).getTime();
+                const traceEnd = trace.end_time ? new Date(trace.end_time).getTime() : Date.now();
+                const spans = allSpans.get(trace.id) || [];
+                
+                // Calculate row height based on number of spans
+                const numSpans = spans.length;
+                const rowHeight = Math.max(60, 30 + (numSpans * 28));
+                
+                // Trace row
+                html += `<div class="gantt-row" style="min-height: ${rowHeight}px;">`;
+                html += '<div class="gantt-row-label">';
+                html += `<div class="gantt-row-label-name">${escapeHtml(trace.name)}</div>`;
+                html += `<div class="gantt-row-label-meta">${trace.agent_id.substring(0, 8)}... | ${trace.status}</div>`;
+                html += '</div>';
+                
+                html += `<div class="gantt-row-bars" style="min-height: ${rowHeight}px;">`;
+                
+                // Render trace bar (background bar showing total trace duration)
+                const traceLeft = ((traceStart - minTime) / timeRange) * 100;
+                const traceWidth = ((traceEnd - traceStart) / timeRange) * 100;
+                html += `<div class="gantt-bar span-cycle" 
+                    style="left: ${traceLeft}%; width: ${Math.max(traceWidth, 0.5)}%; top: 4px; height: 22px; opacity: 0.3; z-index: 1;"
+                    data-trace-id="${trace.id}"
+                    data-type="trace"
+                    data-name="${escapeHtml(trace.name)}"
+                    data-start="${trace.start_time}"
+                    data-end="${trace.end_time || ''}"
+                    data-status="${trace.status}"
+                    onmouseenter="showTooltip(event, this)"
+                    onmouseleave="hideTooltip()"
+                    onmousemove="updateTooltipPosition(event)"></div>`;
+                
+                // Render spans (positioned relative to their trace row)
+                spans.forEach((span, spanIndex) => {
+                    const spanStart = new Date(span.start_time).getTime();
+                    const spanEnd = span.end_time ? new Date(span.end_time).getTime() : Date.now();
+                    const spanLeft = ((spanStart - minTime) / timeRange) * 100;
+                    const spanWidth = ((spanEnd - spanStart) / timeRange) * 100;
+                    const spanType = span.span_type || 'custom';
+                    const spanStatus = span.status || 'running';
+                    
+                    let spanClass = `span-${spanType}`;
+                    if (spanStatus === 'error') {
+                        spanClass = 'span-error';
+                    } else if (spanStatus === 'running') {
+                        spanClass += ' span-running';
+                    }
+                    
+                    // Position spans vertically within this trace's row
+                    const topOffset = 32 + (spanIndex * 28);
+                    html += `<div class="gantt-bar ${spanClass}" 
+                        style="left: ${spanLeft}%; width: ${Math.max(spanWidth, 0.5)}%; top: ${topOffset}px; z-index: 2;"
+                        data-trace-id="${trace.id}"
+                        data-span-id="${span.id}"
+                        data-type="span"
+                        data-name="${escapeHtml(span.name)}"
+                        data-span-type="${spanType}"
+                        data-start="${span.start_time}"
+                        data-end="${span.end_time || ''}"
+                        data-duration="${span.duration_ms || ''}"
+                        data-status="${spanStatus}"
+                        data-error="${span.error || ''}"
+                        onmouseenter="showTooltip(event, this)"
+                        onmouseleave="hideTooltip()"
+                        onmousemove="updateTooltipPosition(event)">${escapeHtml(span.name)}</div>`;
+                });
+                
+                html += '</div></div>';
+            });
+
+            html += '</div>';
+            document.getElementById('tracesContainer').innerHTML = html;
+        }
+
+        // Render list view (original implementation)
+        function renderListView(traces) {
+            const container = document.getElementById('tracesContainer');
+            container.innerHTML = '<div class="traces-list"></div>';
+            const list = container.querySelector('.traces-list');
+
+            traces.forEach(trace => {
+                const card = createTraceCard(trace);
+                list.appendChild(card);
+            });
+        }
+
+        // Create trace card
+        function createTraceCard(trace) {
+            const card = document.createElement('div');
+            card.className = 'trace-card';
+            card.id = `trace-${trace.id}`;
+            if (expandedTraces.has(trace.id)) {
+                card.classList.add('expanded');
+            }
+
+            const startTime = new Date(trace.start_time);
+            const endTime = trace.end_time ? new Date(trace.end_time) : null;
+            const duration = endTime 
+                ? Math.round((endTime - startTime) / 1000) + 's'
+                : 'Running...';
+
+            const statusClass = `status-${trace.status}`;
+
+            card.innerHTML = `
+                <div class="trace-header">
+                    <div>
+                        <div class="trace-title">${escapeHtml(trace.name)}</div>
+                        <div class="trace-id">${trace.id.substring(0, 8)}...</div>
+                    </div>
+                    <span class="status-badge ${statusClass}">${trace.status}</span>
+                </div>
+
+                <div class="trace-info">
+                    <div class="info-item">
+                        <span class="info-label">Agent ID</span>
+                        <span class="info-value">${trace.agent_id.substring(0, 8)}...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Start Time</span>
+                        <span class="info-value">${startTime.toLocaleString()}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">End Time</span>
+                        <span class="info-value">${endTime ? endTime.toLocaleString() : 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Duration</span>
+                        <span class="info-value duration">${duration}</span>
+                    </div>
+                </div>
+
+                ${trace.error ? `
+                <div style="background: #fff5f5; padding: 10px; border-radius: 8px; margin-top: 10px; color: #721c24; font-size: 13px;">
+                    <strong>Error:</strong> ${escapeHtml(trace.error)}
+                </div>
+                ` : ''}
+
+                <div class="spans-section">
+                    <div class="spans-header">
+                        <h3>Spans</h3>
+                        <button onclick="loadSpans('${trace.id}')">Load Spans</button>
+                    </div>
+                    <div id="spans-${trace.id}" class="spans-tree">
+                        <div style="text-align: center; padding: 20px; color: #666;">
+                            Click "Load Spans" to view span details
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add click handler to expand/collapse
+            card.querySelector('.trace-header').addEventListener('click', () => {
+                card.classList.toggle('expanded');
+                if (card.classList.contains('expanded')) {
+                    expandedTraces.add(trace.id);
+                    // Auto-load spans if not already loaded
+                    const spansDiv = card.querySelector(`#spans-${trace.id}`);
+                    if (spansDiv && spansDiv.textContent.includes('Click "Load Spans"')) {
+                        loadSpans(trace.id);
+                    }
+                } else {
+                    expandedTraces.delete(trace.id);
+                }
+            });
+
+            return card;
+        }
+
+        // Load spans for a trace
+        async function loadSpans(traceId) {
+            const spansDiv = document.getElementById(`spans-${traceId}`);
+            if (!spansDiv) return;
+
+            spansDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><span class="loading"></span> Loading spans...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/${traceId}/spans`);
+                const data = await response.json();
+
+                if (data.spans && data.spans.length > 0) {
+                    renderSpans(spansDiv, data.spans, traceId);
+                } else {
+                    spansDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No spans found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading spans:', error);
+                spansDiv.innerHTML = `<div style="text-align: center; padding: 20px; color: #f5576c;">Error loading spans: ${error.message}</div>`;
+            }
+        }
+
+        // Render spans in a tree structure
+        function renderSpans(container, spans, traceId) {
+            // Build a map of spans by ID
+            const spanMap = new Map();
+            spans.forEach(span => {
+                spanMap.set(span.id, span);
+            });
+
+            // Build parent-child relationships
+            const rootSpans = spans.filter(span => !span.parent_span_id);
+            const childMap = new Map();
+            spans.forEach(span => {
+                if (span.parent_span_id) {
+                    if (!childMap.has(span.parent_span_id)) {
+                        childMap.set(span.parent_span_id, []);
+                    }
+                    childMap.get(span.parent_span_id).push(span);
+                }
+            });
+
+            // Render tree recursively
+            function renderSpanTree(span, level = 0) {
+                const indent = '  '.repeat(level);
+                const startTime = new Date(span.start_time);
+                const endTime = span.end_time ? new Date(span.end_time) : null;
+                const duration = endTime 
+                    ? Math.round((endTime - startTime) / 1000) + 's'
+                    : 'Running...';
+
+                const statusClass = span.status === 'error' ? 'error' : '';
+                const children = childMap.get(span.id) || [];
+
+                let html = `
+                    <div class="span-item ${statusClass}">
+                        <div class="span-header">
+                            <div>
+                                <span class="span-name">${escapeHtml(span.name)}</span>
+                                <span class="span-type">${span.span_type}</span>
+                            </div>
+                            <div>
+                                <span class="status-badge status-${span.status}">${span.status}</span>
+                                <span class="duration" style="margin-left: 10px;">${duration}</span>
+                            </div>
+                        </div>
+                        <div class="span-details">
+                            <div class="span-details-row">
+                                <span>Start:</span>
+                                <span>${startTime.toLocaleTimeString()}</span>
+                            </div>
+                            ${endTime ? `
+                            <div class="span-details-row">
+                                <span>End:</span>
+                                <span>${endTime.toLocaleTimeString()}</span>
+                            </div>
+                            ` : ''}
+                            ${span.duration_ms ? `
+                            <div class="span-details-row">
+                                <span>Duration:</span>
+                                <span>${span.duration_ms}ms</span>
+                            </div>
+                            ` : ''}
+                            ${span.error ? `
+                            <div class="span-details-row" style="color: #f5576c;">
+                                <span>Error:</span>
+                                <span>${escapeHtml(span.error)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Render children
+                children.forEach(child => {
+                    html += renderSpanTree(child, level + 1);
+                });
+
+                return html;
+            }
+
+            // Render all root spans
+            let html = '';
+            rootSpans.forEach(span => {
+                html += renderSpanTree(span);
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Tooltip functions
+        function showTooltip(event, element) {
+            const tooltip = document.getElementById('ganttTooltip');
+            const type = element.dataset.type;
+            const name = element.dataset.name;
+            const start = new Date(element.dataset.start);
+            const end = element.dataset.end ? new Date(element.dataset.end) : null;
+            const duration = element.dataset.duration ? `${element.dataset.duration}ms` : 
+                           (end ? `${Math.round((end - start) / 1000)}s` : 'Running...');
+            const status = element.dataset.status;
+            
+            let content = `<strong>${escapeHtml(name)}</strong><br>`;
+            content += `Type: ${type === 'trace' ? 'Trace' : element.dataset.spanType}<br>`;
+            content += `Status: ${status}<br>`;
+            content += `Start: ${start.toLocaleString()}<br>`;
+            if (end) {
+                content += `End: ${end.toLocaleString()}<br>`;
+            }
+            content += `Duration: ${duration}`;
+            
+            if (element.dataset.error) {
+                content += `<br><span style="color: #f5576c;">Error: ${escapeHtml(element.dataset.error)}</span>`;
+            }
+            
+            tooltip.innerHTML = content;
+            tooltip.classList.add('show');
+            updateTooltipPosition(event);
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('ganttTooltip');
+            tooltip.classList.remove('show');
+        }
+
+        function updateTooltipPosition(event) {
+            const tooltip = document.getElementById('ganttTooltip');
+            if (!tooltip.classList.contains('show')) return;
+            
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY + 10) + 'px';
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadTraces(true);
+        });
+
+        // Auto-refresh
+        document.getElementById('autoRefresh').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                autoRefreshInterval = setInterval(() => loadTraces(), 5000);
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        });
+
+        // Enter key on filter input
+        document.getElementById('agentFilter').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadTraces();
+            }
+        });
+
+        // Initial load
+        loadTraces();
+        
+        // Start auto-refresh if enabled
+        if (document.getElementById('autoRefresh').checked) {
+            autoRefreshInterval = setInterval(() => loadTraces(), 5000);
+        }
+    </script>
+</body>
+</html>
+
