@@ -1,9 +1,6 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Processes table (for processManager)
 CREATE TABLE IF NOT EXISTS processes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'error', 'cancelled')),
   prompt TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -18,7 +15,7 @@ CREATE TABLE IF NOT EXISTS processes (
 
 -- Agents table (for orchestrator)
 CREATE TABLE IF NOT EXISTS agents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   status VARCHAR(20) NOT NULL DEFAULT 'running' CHECK (status IN ('running', 'paused', 'sleeping', 'stopped')),
   cycle_count INTEGER NOT NULL DEFAULT 0,
   instructions TEXT NOT NULL,
@@ -31,7 +28,7 @@ CREATE TABLE IF NOT EXISTS agents (
 
 -- Agent memory table (stores agent memory content)
 CREATE TABLE IF NOT EXISTS agent_memory (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -41,7 +38,7 @@ CREATE TABLE IF NOT EXISTS agent_memory (
 
 -- Results table (stores research results)
 CREATE TABLE IF NOT EXISTS results (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
   process_id UUID REFERENCES processes(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
@@ -52,7 +49,7 @@ CREATE TABLE IF NOT EXISTS results (
 
 -- Sub-agents table
 CREATE TABLE IF NOT EXISTS sub_agents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   parent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'researching', 'completed', 'failed')),
   task TEXT NOT NULL,
@@ -98,7 +95,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Long-term memories table (for RAG/semantic search)
 CREATE TABLE IF NOT EXISTS long_term_memories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id TEXT NOT NULL,
   title TEXT NOT NULL,
   content TEXT NOT NULL,
