@@ -43,6 +43,7 @@ export async function createTrace(
     agent_id: agentId,
     name,
     status: 'running',
+    start_time: new Date().toISOString(),
     metadata: metadata || {},
   });
 
@@ -114,6 +115,7 @@ export async function startSpan(
     name,
     span_type: spanType,
     status: 'running',
+    start_time: new Date().toISOString(),
     input: options?.input || null,
     metadata: options?.metadata || {},
   });

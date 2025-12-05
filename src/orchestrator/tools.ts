@@ -340,7 +340,7 @@ These memories may contain relevant information from previous research. Review t
     : null;
 
   // Build tools array
-  const tools = [sleepTool];
+  const tools: any[] = [sleepTool];
   if (saveResultsTool) tools.push(saveResultsTool);
   if (spawnSubAgentTool) tools.push(spawnSubAgentTool);
   if (listSubAgentsTool) tools.push(listSubAgentsTool);

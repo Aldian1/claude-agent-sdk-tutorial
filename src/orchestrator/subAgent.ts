@@ -169,8 +169,6 @@ Quickly research this topic using web search. Find the key information, summariz
           settingSources: ['project'],
           tools: { type: 'preset', preset: 'claude_code' },
           permissionMode: 'bypassPermissions',
-          // Limit response length to keep reports concise
-          maxTokens: 2000,
         };
 
         // Wrap LLM query in a span
@@ -282,15 +280,18 @@ Quickly research this topic using web search. Find the key information, summariz
                     });
                     
                     // End LLM span with error
+                    const errorMessage = Array.isArray(message.errors) && message.errors.length > 0
+                      ? message.errors[0]
+                      : 'Unknown error';
                     await endSpan(llmSpanId, 'error', {
-                      error: message.errors?.[0]?.message || 'Unknown error',
+                      error: errorMessage,
                       output: {
                         errors: message.errors,
                       },
                     });
                     
                     this.status = 'failed';
-                    this.error = message.errors?.[0]?.message || 'Unknown error';
+                    this.error = errorMessage;
                   }
                 }
               }
